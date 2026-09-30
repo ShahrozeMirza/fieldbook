@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: DashboardIcon, count: null },
@@ -12,46 +13,144 @@ const NAV = [
 type Counts = Record<NonNullable<(typeof NAV)[number]["count"]>, number>;
 
 export function Sidebar({ counts }: { counts: Counts }) {
+  return (
+    <>
+      {/* Desktop: fixed ink column. */}
+      <aside className="sticky top-0 hidden h-dvh flex-col bg-ink px-3 pt-5 text-ink-text md:flex">
+        <Wordmark />
+        <NavList counts={counts} className="mt-6" />
+      </aside>
+
+      {/* Phones and small tablets: top bar with a menu button that opens a drawer. */}
+      <MobileNav counts={counts} />
+    </>
+  );
+}
+
+function MobileNav({ counts }: { counts: Counts }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDialogElement>(null);
   const pathname = usePathname();
+  const current = NAV.find((item) => isActive(item.href, pathname));
+
+  useEffect(() => {
+    const dialog = ref.current;
+    if (!dialog) return;
+    if (open && !dialog.open) dialog.showModal();
+    if (!open && dialog.open) dialog.close();
+  }, [open]);
+
+  // Close if the window grows past the breakpoint while the drawer is open.
+  useEffect(() => {
+    const wide = window.matchMedia("(min-width: 768px)");
+    const onChange = () => wide.matches && setOpen(false);
+    wide.addEventListener("change", onChange);
+    return () => wide.removeEventListener("change", onChange);
+  }, []);
 
   return (
-    <aside className="bg-ink text-ink-text md:sticky md:top-0 md:flex md:h-dvh md:flex-col">
-      <div className="flex items-center gap-1 px-3 py-3 sm:gap-4 sm:px-4 md:block md:px-3 md:pt-5 md:pb-0">
-        <Link
-          href="/"
-          className="flex items-center gap-2.5 rounded-control px-2 py-1.5 text-base font-semibold text-white"
-        >
-          <Mark />
-          <span className="sr-only sm:not-sr-only">Fieldbook</span>
-        </Link>
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-2 bg-ink px-2 text-ink-text md:hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-controls="mobile-nav"
+        className="grid size-11 place-items-center rounded-control text-white hover:bg-ink-soft"
+      >
+        <span className="sr-only">Open menu</span>
+        <svg aria-hidden="true" viewBox="0 0 20 20" className="size-5" fill="none">
+          <path d="M3 5.5h14M3 10h14M3 14.5h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+      </button>
+      <Wordmark />
+      {current && (
+        <span className="ml-auto truncate pr-3 text-sm text-ink-text" aria-hidden="true">
+          {current.label}
+        </span>
+      )}
 
-        <nav aria-label="Main" className="min-w-0 md:mt-6">
-          <ul className="relative flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
-            {NAV.map(({ href, label, icon: Icon, count }) => {
-              const active =
-                href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
-              return (
-                <li key={href}>
-                  <Link
-                    href={href}
-                    aria-current={active ? "page" : undefined}
-                    className="group flex h-10 items-center gap-2.5 rounded-control px-2.5 text-sm font-medium transition-colors hover:bg-ink-soft hover:text-white aria-[current=page]:bg-ink-soft aria-[current=page]:text-white"
-                  >
-                    <Icon />
-                    {label}
-                    {count && (
-                      <span className="ml-auto hidden pl-3 text-xs tabular-nums md:inline text-ink-text/70 group-aria-[current=page]:text-ink-text">
-                        {counts[count]}
-                      </span>
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-      </div>
-    </aside>
+      <dialog
+        ref={ref}
+        id="mobile-nav"
+        aria-label="Menu"
+        onClose={() => setOpen(false)}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setOpen(false);
+        }}
+        className="drawer bg-ink p-0 text-ink-text"
+      >
+        <div className="flex h-full flex-col px-3 pt-3 pb-6">
+          <div className="flex items-center justify-between">
+            <Wordmark onNavigate={() => setOpen(false)} />
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="grid size-11 place-items-center rounded-control text-white hover:bg-ink-soft"
+            >
+              <span className="sr-only">Close menu</span>
+              <svg aria-hidden="true" viewBox="0 0 16 16" className="size-4" fill="none">
+                <path d="m4 4 8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+          <NavList counts={counts} className="mt-4" onNavigate={() => setOpen(false)} />
+        </div>
+      </dialog>
+    </header>
+  );
+}
+
+function isActive(href: string, pathname: string) {
+  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function Wordmark({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <Link
+      href="/"
+      onClick={onNavigate}
+      className="flex h-11 items-center gap-2.5 rounded-control px-2 text-base font-semibold text-white"
+    >
+      <Mark />
+      Fieldbook
+    </Link>
+  );
+}
+
+function NavList({
+  counts,
+  className = "",
+  onNavigate,
+}: {
+  counts: Counts;
+  className?: string;
+  onNavigate?: () => void;
+}) {
+  const pathname = usePathname();
+  return (
+    <nav aria-label="Main" className={className}>
+      <ul className="flex flex-col gap-1">
+        {NAV.map(({ href, label, icon: Icon, count }) => (
+          <li key={href}>
+            <Link
+              href={href}
+              onClick={onNavigate}
+              aria-current={isActive(href, pathname) ? "page" : undefined}
+              className="group flex h-11 items-center gap-2.5 rounded-control px-2.5 text-sm font-medium transition-colors hover:bg-ink-soft hover:text-white aria-[current=page]:bg-ink-soft aria-[current=page]:text-white md:h-10"
+            >
+              <Icon />
+              {label}
+              {count && (
+                <span className="ml-auto pl-3 text-xs tabular-nums text-ink-text/70 group-aria-[current=page]:text-ink-text">
+                  {counts[count]}
+                </span>
+              )}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }
 

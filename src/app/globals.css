@@ -125,6 +125,27 @@ dialog.sheet:not([open]) {
   }
 }
 
+/* Mobile navigation drawer, from the left */
+dialog.drawer {
+  margin: 0 auto 0 0;
+  height: 100dvh;
+  max-height: none;
+  width: min(300px, 85vw);
+  translate: 0 0;
+  transition:
+    translate 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    overlay 200ms allow-discrete,
+    display 200ms allow-discrete;
+}
+dialog.drawer:not([open]) {
+  translate: -100% 0;
+}
+@starting-style {
+  dialog.drawer[open] {
+    translate: -100% 0;
+  }
+}
+
 dialog::backdrop {
   background: rgb(21 35 59 / 0.32);
   opacity: 1;
@@ -153,6 +174,7 @@ dialog:not([open])::backdrop {
 
 @media (prefers-reduced-motion: reduce) {
   dialog.sheet,
+  dialog.drawer,
   dialog::backdrop {
     transition: none;
   }
