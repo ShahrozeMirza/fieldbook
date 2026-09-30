@@ -1,26 +1,142 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  --ink: #15233b;
+  --ink-soft: #22324d;
+  --ink-line: #2c3d5a;
+  --ink-text: #c7d1e0;
+
+  --paper: #f5f7fa;
+  --sheet: #ffffff;
+  --rule: #dde3ec;
+  --rule-strong: #c5cfdc;
+  --text: #15233b;
+  --muted: #5b6b82;
+  --signal: #2b5bd7;
+  --signal-strong: #2149b3;
+  --signal-wash: #e9effc;
+  --danger: #b42318;
+  --danger-wash: #fdecea;
+
+  /* Status "ledger tabs": text on tint, each pair AA at 13px. */
+  --status-lead: #3c5a99;
+  --status-lead-wash: #eaf0fb;
+  --status-prospect: #9a6212;
+  --status-prospect-wash: #fbf1e1;
+  --status-customer: #1d7048;
+  --status-customer-wash: #e4f3ea;
+  --status-inactive: #5b6472;
+  --status-inactive-wash: #eef0f3;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-sans: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-line: var(--ink-line);
+  --color-ink-text: var(--ink-text);
+  --color-paper: var(--paper);
+  --color-sheet: var(--sheet);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-signal: var(--signal);
+  --color-signal-strong: var(--signal-strong);
+  --color-signal-wash: var(--signal-wash);
+  --color-danger: var(--danger);
+  --color-danger-wash: var(--danger-wash);
+
+  --text-xs: 0.8125rem; /* 13 */
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.875rem; /* 14 */
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem; /* 16 */
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.25rem; /* 20 */
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.75rem; /* 28 */
+  --text-xl--line-height: 2.125rem;
+
+  --radius-control: 6px;
+  --radius-panel: 10px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01";
+}
+
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+/* Status tones: set --tab / --tab-wash, consumed by the badge and the row's ledger tab. */
+[data-status="lead"] { --tab: var(--status-lead); --tab-wash: var(--status-lead-wash); }
+[data-status="prospect"] { --tab: var(--status-prospect); --tab-wash: var(--status-prospect-wash); }
+[data-status="customer"] { --tab: var(--status-customer); --tab-wash: var(--status-customer-wash); }
+[data-status="inactive"] { --tab: var(--status-inactive); --tab-wash: var(--status-inactive-wash); }
+
+/* Slide-over sheet */
+dialog.sheet {
+  margin: 0 0 0 auto;
+  height: 100dvh;
+  max-height: none;
+  width: min(480px, 100vw);
+  max-width: 100vw;
+  translate: 0 0;
+  transition:
+    translate 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    overlay 200ms allow-discrete,
+    display 200ms allow-discrete;
+}
+dialog.sheet:not([open]) {
+  translate: 100% 0;
+}
+@starting-style {
+  dialog.sheet[open] {
+    translate: 100% 0;
+  }
+}
+
+dialog::backdrop {
+  background: rgb(21 35 59 / 0.32);
+  opacity: 1;
+  transition:
+    opacity 200ms,
+    overlay 200ms allow-discrete,
+    display 200ms allow-discrete;
+}
+dialog:not([open])::backdrop {
+  opacity: 0;
+}
+@starting-style {
+  dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* A saved row flashes once so you can see what changed. */
+@keyframes row-flash {
+  from { background-color: var(--signal-wash); }
+  to { background-color: transparent; }
+}
+.row-flash > td {
+  animation: row-flash 1400ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.sheet,
+  dialog::backdrop {
+    transition: none;
+  }
+  .row-flash > td {
+    animation: none;
+  }
 }
