@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { STATUSES, isStatus, type Status } from "@/lib/contacts";
 import { ContactsView } from "./_components/contacts-view";
@@ -7,6 +8,7 @@ import { FilterBar } from "./_components/filter-bar";
 export const metadata: Metadata = { title: "Contacts" };
 
 export default async function ContactsPage({ searchParams }: PageProps<"/contacts">) {
+  await requireUser();
   const params = await searchParams;
   const q = typeof params.q === "string" ? params.q.trim() : "";
   const status = isStatus(params.status) ? params.status : null;

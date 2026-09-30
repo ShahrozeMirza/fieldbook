@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { isStage, type DealCard } from "@/lib/deals";
 import { DealsBoard } from "./_components/deals-board";
@@ -7,6 +8,7 @@ import { DealsBoard } from "./_components/deals-board";
 export const metadata: Metadata = { title: "Deals" };
 
 export default async function DealsPage() {
+  await requireUser();
   await connection();
   const [deals, contacts] = await Promise.all([
     db.deal.findMany({

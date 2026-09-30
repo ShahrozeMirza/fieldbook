@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
+import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { contactSchema, type ContactFields } from "@/lib/contacts";
 
@@ -47,6 +48,7 @@ export async function createContact(
   _prev: ContactFormState,
   formData: FormData,
 ): Promise<ContactFormState> {
+  await requireUser();
   const values = readForm(formData);
   const parsed = contactSchema.safeParse(values);
   if (!parsed.success) return invalid(parsed.error, values);
@@ -72,6 +74,7 @@ export async function updateContact(
   _prev: ContactFormState,
   formData: FormData,
 ): Promise<ContactFormState> {
+  await requireUser();
   const values = readForm(formData);
   const parsed = contactSchema.safeParse(values);
   if (!parsed.success) return invalid(parsed.error, values);
@@ -96,6 +99,7 @@ export async function updateContact(
 }
 
 export async function deleteContact(id: string) {
+  await requireUser();
   await db.contact.deleteMany({ where: { id } });
   refresh();
 }

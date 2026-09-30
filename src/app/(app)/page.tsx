@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { STATUSES, STATUS_LABELS } from "@/lib/contacts";
+import { requireUser } from "@/lib/auth";
 import { getDashboard, type StageSummary } from "@/lib/dashboard";
 import { OPEN_STAGES, STAGE_LABELS, formatMoney } from "@/lib/deals";
 import { RevenueChart } from "./_components/revenue-chart";
@@ -9,6 +10,7 @@ import { RevenueChart } from "./_components/revenue-chart";
 export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
+  await requireUser();
   await connection();
   const data = await getDashboard();
 

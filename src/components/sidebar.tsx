@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Mark } from "@/components/mark";
+import { logout } from "@/app/login/actions";
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: DashboardIcon, count: null },
@@ -12,22 +14,23 @@ const NAV = [
 
 type Counts = Record<NonNullable<(typeof NAV)[number]["count"]>, number>;
 
-export function Sidebar({ counts }: { counts: Counts }) {
+export function Sidebar({ counts, username }: { counts: Counts; username: string }) {
   return (
     <>
       {/* Desktop: fixed ink column. */}
       <aside className="sticky top-0 hidden h-dvh flex-col bg-ink px-3 pt-5 text-ink-text md:flex">
         <Wordmark />
         <NavList counts={counts} className="mt-6" />
+        <Account username={username} className="mt-auto pb-4" />
       </aside>
 
       {/* Phones and small tablets: top bar with a menu button that opens a drawer. */}
-      <MobileNav counts={counts} />
+      <MobileNav counts={counts} username={username} />
     </>
   );
 }
 
-function MobileNav({ counts }: { counts: Counts }) {
+function MobileNav({ counts, username }: { counts: Counts; username: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDialogElement>(null);
   const pathname = usePathname();
@@ -95,9 +98,29 @@ function MobileNav({ counts }: { counts: Counts }) {
             </button>
           </div>
           <NavList counts={counts} className="mt-4" onNavigate={() => setOpen(false)} />
+          <Account username={username} className="mt-auto" />
         </div>
       </dialog>
     </header>
+  );
+}
+
+function Account({ username, className = "" }: { username: string; className?: string }) {
+  return (
+    <div className={`border-t border-ink-line pt-3 ${className}`}>
+      <form action={logout} className="flex items-center gap-2 px-2.5">
+        <span className="min-w-0 flex-1 truncate text-sm text-ink-text">
+          <span className="sr-only">Signed in as </span>
+          {username}
+        </span>
+        <button
+          type="submit"
+          className="h-9 shrink-0 rounded-control px-2.5 text-sm font-medium text-ink-text hover:bg-ink-soft hover:text-white"
+        >
+          Sign out
+        </button>
+      </form>
+    </div>
   );
 }
 
@@ -151,17 +174,6 @@ function NavList({
         ))}
       </ul>
     </nav>
-  );
-}
-
-/** A ruled notebook page: the Fieldbook mark. */
-function Mark() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-      <rect x="1" y="1" width="20" height="20" rx="4" fill="#2b5bd7" />
-      <path d="M6 1v20" stroke="#15233b" strokeOpacity=".35" strokeWidth="1.5" />
-      <path d="M9 7h8M9 11h8M9 15h5" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
   );
 }
 

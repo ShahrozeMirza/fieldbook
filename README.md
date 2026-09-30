@@ -12,7 +12,9 @@ bun run db:seed      # adds 10 sample contacts, 8 deals, and 10 past won deals
 bun dev
 ```
 
-Open http://localhost:3000 for the dashboard. Contacts are at `/contacts` and the pipeline at `/deals`.
+Open http://localhost:3000 and sign in as **admin** / **admin123** (created by the seed). Every page requires sign-in. There's no signup or password reset.
+
+After signing in you land on the dashboard. Contacts are at `/contacts` and the pipeline at `/deals`.
 
 The revenue chart counts won deals by the month they closed, in the server's local time. The past won deals in the seed are dated relative to the day you run it, so the chart always has a year of history.
 

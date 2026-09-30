@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
+import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { dealSchema, isStage, nextClosedAt, type DealFields, type Stage } from "@/lib/deals";
 
@@ -59,6 +60,7 @@ export async function createDeal(
   _prev: DealFormState,
   formData: FormData,
 ): Promise<DealFormState> {
+  await requireUser();
   const values = readForm(formData);
   const parsed = dealSchema.safeParse(values);
   if (!parsed.success) return invalid(parsed.error, values);
@@ -82,6 +84,7 @@ export async function updateDeal(
   _prev: DealFormState,
   formData: FormData,
 ): Promise<DealFormState> {
+  await requireUser();
   const values = readForm(formData);
   const parsed = dealSchema.safeParse(values);
   if (!parsed.success) return invalid(parsed.error, values);
@@ -117,6 +120,7 @@ export async function updateDeal(
  * list of deal ids in the destination column after the drop, top to bottom.
  */
 export async function moveDeal(id: string, stage: string, orderedIds: string[]) {
+  await requireUser();
   if (!isStage(stage) || !orderedIds.includes(id)) {
     return { ok: false as const, message: "That move couldn’t be saved. The board has been reset." };
   }
@@ -148,6 +152,7 @@ export async function moveDeal(id: string, stage: string, orderedIds: string[]) 
 }
 
 export async function deleteDeal(id: string) {
+  await requireUser();
   await db.deal.deleteMany({ where: { id } });
   refresh();
 }
