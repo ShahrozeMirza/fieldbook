@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
-import { dealSchema, isStage, type DealFields, type Stage } from "@/lib/deals";
+import { dealSchema, isStage, nextClosedAt, type DealFields, type Stage } from "@/lib/deals";
 
 export type DealFormState =
   | { ok: true; id: string }
@@ -67,7 +67,11 @@ export async function createDeal(
   }
 
   const deal = await db.deal.create({
-    data: { ...parsed.data, position: await nextPosition(parsed.data.stage) },
+    data: {
+      ...parsed.data,
+      position: await nextPosition(parsed.data.stage),
+      closedAt: nextClosedAt(null, parsed.data.stage, null),
+    },
   });
   refresh();
   return { ok: true, id: deal.id };
@@ -85,7 +89,10 @@ export async function updateDeal(
     return { ok: false, values, fieldErrors: { contactId: missingContact } };
   }
 
-  const existing = await db.deal.findUnique({ where: { id }, select: { stage: true } });
+  const existing = await db.deal.findUnique({
+    where: { id },
+    select: { stage: true, closedAt: true },
+  });
   if (!existing) {
     return { ok: false, values, message: "This deal was deleted. Close this panel to see the current pipeline." };
   }
@@ -94,7 +101,13 @@ export async function updateDeal(
   const position =
     existing.stage === parsed.data.stage ? undefined : await nextPosition(parsed.data.stage);
 
-  await db.deal.update({ where: { id }, data: { ...parsed.data, position } });
+  const closedAt = nextClosedAt(
+    isStage(existing.stage) ? existing.stage : null,
+    parsed.data.stage,
+    existing.closedAt,
+  );
+
+  await db.deal.update({ where: { id }, data: { ...parsed.data, position, closedAt } });
   refresh();
   return { ok: true, id };
 }
@@ -108,9 +121,16 @@ export async function moveDeal(id: string, stage: string, orderedIds: string[]) 
     return { ok: false as const, message: "That move couldn’t be saved. The board has been reset." };
   }
 
+  const existing = await db.deal.findUnique({ where: { id }, select: { stage: true, closedAt: true } });
+  if (!existing) {
+    refresh();
+    return { ok: false as const, message: "This deal was deleted elsewhere. The board has been refreshed." };
+  }
+  const closedAt = nextClosedAt(isStage(existing.stage) ? existing.stage : null, stage, existing.closedAt);
+
   try {
     await db.$transaction([
-      db.deal.update({ where: { id }, data: { stage } }),
+      db.deal.update({ where: { id }, data: { stage, closedAt } }),
       ...orderedIds.map((dealId, position) =>
         db.deal.updateMany({ where: { id: dealId, stage }, data: { position } }),
       ),

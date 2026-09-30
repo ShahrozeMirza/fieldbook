@@ -31,11 +31,14 @@ model Deal {
   stage     String   @default("lead")
   /// Order within the stage column, ascending
   position  Int      @default(0)
+  /// When the deal entered Won or Lost; null while open
+  closedAt  DateTime?
   contactId String?
   contact   Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([stage, position])
+  @@index([stage, closedAt])
   @@index([contactId])
 }

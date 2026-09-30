@@ -32,6 +32,32 @@ const deals = [
   { id: "seed-deal-8", title: "Import compliance module", value: 26000, stage: "lost", email: "kenji.w@harborlane.jp" },
 ];
 
+/** Mid-month, `n` months before the current local month. */
+function monthsAgo(n: number) {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth() - n, 15, 12);
+}
+const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000);
+
+const closedAt: Record<string, Date> = {
+  "seed-deal-7": daysAgo(0),
+  "seed-deal-8": daysAgo(21),
+};
+
+// Won deals from earlier months, so revenue by month has history to show.
+const history = [
+  { months: 11, title: "Route planning pilot", value: 12000, email: "ana.ruiz@northwindlogistics.com" },
+  { months: 10, title: "Starter license, 20 seats", value: 6400, email: "marcus@brightpath.io" },
+  { months: 9, title: "Patient intake forms", value: 14500, email: "priya.n@kestrelhealth.com" },
+  { months: 7, title: "Nordic distribution add-on", value: 19800, email: "hannah@fjordsupply.se" },
+  { months: 6, title: "Contract review workspace", value: 11200, email: "d.okafor@meridianlegal.com" },
+  { months: 5, title: "Loyalty program setup", value: 5600, email: "sophie.tremblay@lumencafe.ca" },
+  { months: 4, title: "Fleet tracking, phase 1", value: 27500, email: "ana.ruiz@northwindlogistics.com" },
+  { months: 3, title: "Clinic scheduling upgrade", value: 9900, email: "priya.n@kestrelhealth.com" },
+  { months: 2, title: "Dental practice onboarding", value: 16800, email: "rachel@clearwaterdental.com" },
+  { months: 1, title: "Starter license renewal", value: 8200, email: "marcus@brightpath.io" },
+];
+
 async function main() {
   for (const contact of contacts) {
     await db.contact.upsert({
@@ -46,10 +72,25 @@ async function main() {
   for (const { email, ...deal } of deals) {
     const contact = await db.contact.findUnique({ where: { email }, select: { id: true } });
     const position = (positions[deal.stage] = (positions[deal.stage] ?? -1) + 1);
-    const data = { ...deal, position, contactId: contact?.id ?? null };
+    const data = { ...deal, position, contactId: contact?.id ?? null, closedAt: closedAt[deal.id] ?? null };
     await db.deal.upsert({ where: { id: deal.id }, update: data, create: data });
   }
-  console.log(`Seeded ${deals.length} deals.`);
+
+  for (const [i, { months, email, ...deal }] of history.entries()) {
+    const contact = await db.contact.findUnique({ where: { email }, select: { id: true } });
+    const id = `seed-won-${i + 1}`;
+    const data = {
+      ...deal,
+      id,
+      stage: "won",
+      position: (positions.won = (positions.won ?? -1) + 1),
+      contactId: contact?.id ?? null,
+      closedAt: monthsAgo(months),
+      createdAt: monthsAgo(months + 1),
+    };
+    await db.deal.upsert({ where: { id }, update: data, create: data });
+  }
+  console.log(`Seeded ${deals.length} open and recent deals, plus ${history.length} won deals from earlier months.`);
 }
 
 main()

@@ -22,7 +22,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useRef, useState, useTransition } from "react";
+import { useId, useRef, useState, useTransition } from "react";
 import { DeleteButton } from "@/components/delete-button";
 import { Sheet } from "@/components/sheet";
 import {
@@ -62,6 +62,8 @@ export function DealsBoard({ deals, contacts }: { deals: DealCard[]; contacts: C
   const [notice, setNotice] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const snapshot = useRef<Columns>(columns);
+  // A stable id keeps dnd-kit's generated aria ids the same on server and client.
+  const dndId = useId();
 
   // Take fresh server data, but never mid-drag.
   if (deals !== syncedDeals && activeId === null) {
@@ -206,6 +208,7 @@ export function DealsBoard({ deals, contacts }: { deals: DealCard[]; contacts: C
       )}
 
       <DndContext
+        id={dndId}
         sensors={sensors}
         collisionDetection={closestCorners}
         onDragStart={onDragStart}
