@@ -3,9 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const NAV = [{ href: "/contacts", label: "Contacts", icon: ContactsIcon }] as const;
+const NAV = [
+  { href: "/contacts", label: "Contacts", icon: ContactsIcon, count: "contacts" },
+  { href: "/deals", label: "Deals", icon: DealsIcon, count: "deals" },
+] as const;
 
-export function Sidebar({ contactCount }: { contactCount: number }) {
+type Counts = Record<(typeof NAV)[number]["count"], number>;
+
+export function Sidebar({ counts }: { counts: Counts }) {
   const pathname = usePathname();
 
   return (
@@ -19,9 +24,9 @@ export function Sidebar({ contactCount }: { contactCount: number }) {
           Fieldbook
         </Link>
 
-        <nav aria-label="Main" className="md:mt-6">
+        <nav aria-label="Main" className="min-w-0 md:mt-6">
           <ul className="flex gap-1 md:flex-col">
-            {NAV.map(({ href, label, icon: Icon }) => {
+            {NAV.map(({ href, label, icon: Icon, count }) => {
               const active = pathname === href || pathname.startsWith(`${href}/`);
               return (
                 <li key={href}>
@@ -32,8 +37,8 @@ export function Sidebar({ contactCount }: { contactCount: number }) {
                   >
                     <Icon />
                     {label}
-                    <span className="ml-auto pl-3 text-xs tabular-nums text-ink-text/70 group-aria-[current=page]:text-ink-text">
-                      {contactCount}
+                    <span className="ml-auto hidden pl-3 text-xs tabular-nums md:inline text-ink-text/70 group-aria-[current=page]:text-ink-text">
+                      {counts[count]}
                     </span>
                   </Link>
                 </li>
@@ -63,6 +68,16 @@ function ContactsIcon() {
       <circle cx="6" cy="5.5" r="2.5" stroke="currentColor" strokeWidth="1.4" />
       <path d="M1.75 13.25c.6-2.3 2.2-3.5 4.25-3.5s3.65 1.2 4.25 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
       <path d="M10.5 3.25a2.5 2.5 0 0 1 0 4.5M12 9.9c1.2.5 2 1.6 2.3 3.35" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function DealsIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <rect x="1.75" y="2.25" width="3.5" height="11.5" rx="1" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="6.25" y="2.25" width="3.5" height="8" rx="1" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="10.75" y="2.25" width="3.5" height="5" rx="1" stroke="currentColor" strokeWidth="1.4" />
     </svg>
   );
 }

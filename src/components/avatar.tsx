@@ -6,11 +6,13 @@ export function initials(name: string) {
   return (first + last).toUpperCase();
 }
 
-export function Avatar({ name }: { name: string }) {
+export function Avatar({ name, size = "md" }: { name: string; size?: "sm" | "md" }) {
   return (
     <span
       aria-hidden="true"
-      className="grid size-8 shrink-0 place-items-center rounded-full bg-[#e8edf4] text-xs font-semibold text-ink"
+      className={`grid shrink-0 place-items-center rounded-full bg-[#e8edf4] font-semibold text-ink ${
+        size === "sm" ? "size-6 text-[11px]" : "size-8 text-xs"
+      }`}
     >
       {initials(name)}
     </span>

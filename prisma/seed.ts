@@ -20,6 +20,18 @@ const contacts = [
   { name: "Leo Castellano", email: "leo.castellano@gmail.com", phone: null, company: null, status: "lead" },
 ];
 
+// Stable ids keep the seed safe to re-run.
+const deals = [
+  { id: "seed-deal-1", title: "Site safety pilot", value: 9800, stage: "lead", email: "tomas.herrera@alturabuild.mx" },
+  { id: "seed-deal-2", title: "POS integration for 12 cafés", value: 7200, stage: "lead", email: "sophie.tremblay@lumencafe.ca" },
+  { id: "seed-deal-3", title: "Annual platform license", value: 18500, stage: "contacted", email: "marcus@brightpath.io" },
+  { id: "seed-deal-4", title: "Records migration", value: 15000, stage: "contacted", email: "d.okafor@meridianlegal.com" },
+  { id: "seed-deal-5", title: "Fleet tracking rollout", value: 48000, stage: "proposal", email: "ana.ruiz@northwindlogistics.com" },
+  { id: "seed-deal-6", title: "Warehouse expansion add-on", value: 22400, stage: "proposal", email: "hannah@fjordsupply.se" },
+  { id: "seed-deal-7", title: "Clinic onboarding, 4 sites", value: 32000, stage: "won", email: "priya.n@kestrelhealth.com" },
+  { id: "seed-deal-8", title: "Import compliance module", value: 26000, stage: "lost", email: "kenji.w@harborlane.jp" },
+];
+
 async function main() {
   for (const contact of contacts) {
     await db.contact.upsert({
@@ -29,6 +41,15 @@ async function main() {
     });
   }
   console.log(`Seeded ${contacts.length} contacts.`);
+
+  const positions: Record<string, number> = {};
+  for (const { email, ...deal } of deals) {
+    const contact = await db.contact.findUnique({ where: { email }, select: { id: true } });
+    const position = (positions[deal.stage] = (positions[deal.stage] ?? -1) + 1);
+    const data = { ...deal, position, contactId: contact?.id ?? null };
+    await db.deal.upsert({ where: { id: deal.id }, update: data, create: data });
+  }
+  console.log(`Seeded ${deals.length} deals.`);
 }
 
 main()

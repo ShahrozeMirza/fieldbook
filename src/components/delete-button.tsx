@@ -1,14 +1,19 @@
 "use client";
 
 import { useRef, useTransition } from "react";
-import type { ContactRow } from "@/lib/contacts";
-import { deleteContact } from "../actions";
 
-export function DeleteContactButton({
-  contact,
+/** "Delete {noun}" button with a confirmation dialog. */
+export function DeleteButton({
+  noun,
+  name,
+  detail = `This removes the ${noun} permanently.`,
+  onConfirm,
   onDeleted,
 }: {
-  contact: ContactRow;
+  noun: string;
+  name: string;
+  detail?: string;
+  onConfirm: () => Promise<void>;
   onDeleted: () => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -16,7 +21,7 @@ export function DeleteContactButton({
 
   function confirm() {
     startTransition(async () => {
-      await deleteContact(contact.id);
+      await onConfirm();
       ref.current?.close();
       onDeleted();
     });
@@ -29,7 +34,7 @@ export function DeleteContactButton({
         onClick={() => ref.current?.showModal()}
         className="h-10 rounded-control px-3 text-sm font-medium text-danger hover:bg-danger-wash"
       >
-        Delete contact
+        Delete {noun}
       </button>
 
       <dialog
@@ -39,10 +44,10 @@ export function DeleteContactButton({
         className="m-auto w-[min(400px,calc(100vw-32px))] rounded-panel bg-sheet p-6 text-text shadow-[0_16px_48px_rgb(21_35_59/0.2)]"
       >
         <h2 id="delete-title" className="text-base font-semibold">
-          Delete {contact.name}?
+          Delete {name}?
         </h2>
         <p id="delete-desc" className="mt-1.5 text-sm text-muted">
-          This removes the contact permanently.
+          {detail}
         </p>
         <div className="mt-6 flex justify-end gap-2">
           <button
@@ -59,7 +64,7 @@ export function DeleteContactButton({
             disabled={pending}
             className="h-10 rounded-control bg-danger px-4 text-sm font-medium text-white hover:bg-[#9a1e14] disabled:opacity-70"
           >
-            {pending ? "Deleting…" : "Delete contact"}
+            {pending ? "Deleting…" : `Delete ${noun}`}
           </button>
         </div>
       </dialog>

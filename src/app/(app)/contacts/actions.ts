@@ -39,8 +39,8 @@ function isUniqueEmailError(error: unknown) {
 }
 
 function refresh() {
-  // The sidebar count lives in the layout, so revalidate from the layout down.
-  revalidatePath("/contacts", "layout");
+  // Sidebar counts live in the layout, and deal cards show contact names.
+  revalidatePath("/", "layout");
 }
 
 export async function createContact(

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, type ReactNode } from "react";
+import { Field, FormFooter, inputClass, invalidProps, optionClass } from "@/components/form";
 import { STATUSES, STATUS_LABELS, type ContactFields, type ContactRow } from "@/lib/contacts";
 import { createContact, updateContact, type ContactFormState } from "../actions";
 
@@ -99,7 +100,7 @@ export function ContactForm({
               <label
                 key={s}
                 data-status={s}
-                className="relative flex h-10 cursor-pointer items-center gap-2 rounded-control border border-rule bg-sheet px-3 text-sm text-muted hover:border-rule-strong has-checked:border-(--tab) has-checked:bg-(--tab-wash) has-checked:font-medium has-checked:text-(--tab) has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-signal"
+                className={optionClass}
               >
                 <input
                   type="radio"
@@ -117,59 +118,13 @@ export function ContactForm({
         </fieldset>
       </div>
 
-      <footer className="flex items-center gap-2 border-t border-rule bg-sheet px-6 py-4">
-        {deleteSlot}
-        <button
-          type="button"
-          onClick={onCancel}
-          className="ml-auto h-10 rounded-control px-4 text-sm font-medium text-muted hover:bg-paper hover:text-text"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={pending}
-          className="h-10 rounded-control bg-signal px-4 text-sm font-medium text-white hover:bg-signal-strong disabled:opacity-70"
-        >
-          {contact ? (pending ? "Saving…" : "Save changes") : pending ? "Creating…" : "Create contact"}
-        </button>
-      </footer>
+      <FormFooter
+        deleteSlot={deleteSlot}
+        onCancel={onCancel}
+        pending={pending}
+        submitLabel={contact ? "Save changes" : "Create contact"}
+        pendingLabel={contact ? "Saving…" : "Creating…"}
+      />
     </form>
-  );
-}
-
-const inputClass =
-  "h-10 w-full rounded-control border border-rule bg-sheet px-3 text-sm text-text hover:border-rule-strong focus:border-signal focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-signal/30 aria-invalid:border-danger";
-
-function invalidProps(field: string, error?: string) {
-  return error ? { "aria-invalid": true, "aria-describedby": `${field}-error` } : {};
-}
-
-function Field({
-  id,
-  label,
-  hint,
-  error,
-  children,
-}: {
-  id: string;
-  label: string;
-  hint?: string;
-  error?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div>
-      <label htmlFor={id} className="mb-1.5 flex items-baseline gap-2 text-xs font-medium text-text">
-        {label}
-        {hint && <span className="font-normal text-muted">{hint}</span>}
-      </label>
-      {children}
-      {error && (
-        <p id={`${id}-error`} className="mt-1.5 text-xs text-danger">
-          {error}
-        </p>
-      )}
-    </div>
   );
 }

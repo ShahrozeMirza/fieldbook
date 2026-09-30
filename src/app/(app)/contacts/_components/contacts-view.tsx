@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import type { ContactRow } from "@/lib/contacts";
-import { Avatar } from "./avatar";
+import { deleteContact } from "../actions";
+import { Avatar } from "@/components/avatar";
+import { DeleteButton } from "@/components/delete-button";
+import { Sheet } from "@/components/sheet";
 import { ContactForm } from "./contact-form";
-import { DeleteContactButton } from "./delete-contact-button";
-import { Sheet } from "./sheet";
 import { StatusBadge } from "./status-badge";
 
 type Editing = { mode: "create" } | { mode: "edit"; contact: ContactRow };
@@ -171,7 +172,12 @@ export function ContactsView({
           onCancel={() => setOpen(false)}
           deleteSlot={
             editing.mode === "edit" ? (
-              <DeleteContactButton contact={editing.contact} onDeleted={() => setOpen(false)} />
+              <DeleteButton
+                noun="contact"
+                name={editing.contact.name}
+                onConfirm={() => deleteContact(editing.contact.id)}
+                onDeleted={() => setOpen(false)}
+              />
             ) : undefined
           }
         />

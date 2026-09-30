@@ -17,6 +17,25 @@ model Contact {
   status    String   @default("lead")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deals     Deal[]
 
   @@index([status])
+}
+
+model Deal {
+  id        String   @id @default(cuid())
+  title     String
+  /// Whole US dollars
+  value     Int
+  /// One of: lead, contacted, proposal, won, lost (validated in src/lib/deals.ts)
+  stage     String   @default("lead")
+  /// Order within the stage column, ascending
+  position  Int      @default(0)
+  contactId String?
+  contact   Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([stage, position])
+  @@index([contactId])
 }
