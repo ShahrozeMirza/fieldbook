@@ -1,10 +1,12 @@
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient } from "@/generated/prisma/client";
+import { databaseUrl } from "@/lib/database-url";
 
 function createClient() {
-  const adapter = new PrismaBetterSqlite3({
-    url: process.env.DATABASE_URL ?? "file:./dev.db",
-  });
+  // `next build` loads this module to collect page data but never queries,
+  // so it must not demand the production database.
+  const building = process.env.NEXT_PHASE === "phase-production-build";
+  const adapter = new PrismaBetterSqlite3({ url: databaseUrl({ requireInProduction: !building }) });
   return new PrismaClient({ adapter });
 }
 

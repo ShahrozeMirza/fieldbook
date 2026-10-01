@@ -1,11 +1,10 @@
 import "dotenv/config";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient } from "../src/generated/prisma/client";
+import { databaseUrl } from "../src/lib/database-url";
 import { hashPassword } from "../src/lib/password";
 
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL ?? "file:./dev.db",
-});
+const adapter = new PrismaBetterSqlite3({ url: databaseUrl() });
 const db = new PrismaClient({ adapter });
 
 const contacts = [
@@ -60,8 +59,13 @@ const history = [
 ];
 
 async function main() {
-  // The one demo login. Re-running the seed resets its password.
-  const passwordHash = await hashPassword("admin123");
+  // The one login. Set ADMIN_PASSWORD to use something other than the demo
+  // password (do this in production). Re-running the seed resets the password.
+  const adminPassword = process.env.ADMIN_PASSWORD?.trim() || "admin123";
+  if (!process.env.ADMIN_PASSWORD?.trim()) {
+    console.warn('ADMIN_PASSWORD is not set, so "admin" gets the demo password "admin123".');
+  }
+  const passwordHash = await hashPassword(adminPassword);
   await db.user.upsert({
     where: { username: "admin" },
     update: { passwordHash },
