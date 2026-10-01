@@ -1,10 +1,10 @@
 import "dotenv/config";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { databaseUrl } from "../src/lib/database-url";
+import { databaseConfig } from "../src/lib/database-url";
 import { hashPassword } from "../src/lib/password";
 
-const adapter = new PrismaBetterSqlite3({ url: databaseUrl() });
+const adapter = new PrismaLibSql(databaseConfig());
 const db = new PrismaClient({ adapter });
 
 const contacts = [

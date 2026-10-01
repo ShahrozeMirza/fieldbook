@@ -1,6 +1,6 @@
 # Fieldbook
 
-A CRM built with Next.js 16, Prisma 7 and SQLite.
+A CRM built with Next.js 16, Prisma 7 and SQLite (a local file in development, [Turso](https://turso.tech) in production).
 
 ## Setup
 
@@ -20,14 +20,29 @@ The revenue chart counts won deals by the month they closed, in the server's loc
 
 After a schema change, restart `bun dev`. The Prisma client is cached across hot reloads, so a running server keeps the old models until it restarts.
 
-The seed runs under Node (via `tsx`) because Bun's runtime can't load the `better-sqlite3` native addon. The Next.js app itself runs on Node.
+Bun installs packages, but the app, the seed and the migration script run on Node (the scripts via `tsx`).
 
-## Production (Railway, SQLite on a volume)
+## Production (Netlify + Turso)
 
-- Node 22 (>= 22.12). Bun installs and builds; the app itself runs on Node.
-- Attach a volume mounted at `/data` and set `DATABASE_URL=file:/data/fieldbook.db`.
-- Run migrations in the start command, not as a pre-deploy step: Railway only mounts volumes on the running service.
-  Start command: `bun run db:deploy && bun run start`
-- Seed once from a shell on the running service (`railway ssh`): `bun run db:seed`, with `ADMIN_PASSWORD` set to a strong password.
-  Re-running the seed resets the admin password and the sample records.
-- One replica only. SQLite and Railway volumes don't support more.
+Prisma talks to SQLite through the libSQL adapter, which reads a local file (`file:./dev.db`) or a Turso database (`libsql://…`). The schema and migrations are the same for both.
+
+**Database (once, from your machine, with the [Turso CLI](https://docs.turso.tech/cli/introduction)):**
+
+```bash
+turso db create fieldbook            # pick a location close to Netlify's functions (US East by default)
+turso db show fieldbook --url        # → DATABASE_URL
+turso db tokens create fieldbook     # → TURSO_AUTH_TOKEN
+DATABASE_URL=libsql://… TURSO_AUTH_TOKEN=… bun run db:deploy   # apply migrations
+DATABASE_URL=libsql://… TURSO_AUTH_TOKEN=… bun run db:seed     # create admin and sample data
+```
+
+**Netlify:** import the repo. `netlify.toml` sets the build command and Node 22. Under Site configuration → Environment variables, add `DATABASE_URL` and `TURSO_AUTH_TOKEN`.
+
+**Schema changes:** create the migration locally with `bun run db:migrate` (against `dev.db`), commit it, then run `bun run db:deploy` with the Turso variables. Prisma Migrate can't connect to Turso, so `db:deploy` applies the SQL files itself and records them in `_fieldbook_migrations`. Deploying the app doesn't run migrations, so apply them before deploying code that needs them.
+
+**Notes:**
+
+- The login page shows the demo credentials. Seed production without `ADMIN_PASSWORD` so they stay correct. Re-running the seed resets the admin password and the sample records.
+- Turso archives free databases after 10 days without activity. Unarchive with `turso group unarchive <group>`.
+- Netlify's free plan pauses the site when the monthly credits run out. Each production deploy costs credits, so deploy sparingly.
+- Functions run in UTC, so the revenue chart groups by UTC month.

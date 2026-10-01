@@ -1,14 +1,14 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
-import { databaseUrl } from "./src/lib/database-url";
+import { databaseUrl, isRemoteDatabase } from "./src/lib/database-url";
 
-// `prisma migrate deploy` only ever targets a real deployment, so never let it
-// fall back to ./dev.db. Other commands (generate at build time, migrate dev,
-// db seed locally) keep the development fallback.
-const deploying = process.argv.includes("migrate") && process.argv.includes("deploy");
-if (deploying && !process.env.DATABASE_URL?.trim()) {
+const url = databaseUrl({ requireInProduction: false });
+
+// Prisma Migrate only works with the local SQLite file. Turso gets the same
+// migrations through `bun run db:deploy` (prisma/deploy.ts).
+if (process.argv.includes("migrate") && isRemoteDatabase(url)) {
   throw new Error(
-    "DATABASE_URL is not set. `prisma migrate deploy` needs it to point at the SQLite file on the persistent volume, e.g. file:/data/fieldbook.db",
+    "Prisma Migrate can't connect to Turso. Unset DATABASE_URL to work on ./dev.db, or run `bun run db:deploy` to apply migrations to Turso.",
   );
 }
 
@@ -18,7 +18,5 @@ export default defineConfig({
     path: "prisma/migrations",
     seed: "tsx prisma/seed.ts",
   },
-  datasource: {
-    url: databaseUrl({ requireInProduction: false }),
-  },
+  datasource: { url },
 });

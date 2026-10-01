@@ -21,7 +21,13 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         </div>
         <div className="px-6 pt-6 pb-7">
           <h1 className="text-lg font-semibold text-text">Sign in</h1>
-          <p className="mt-1 mb-6 text-sm text-muted">Use your Fieldbook username and password.</p>
+          <p className="mt-1 mb-5 text-sm text-muted">Use your Fieldbook username and password.</p>
+          <dl className="mb-6 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 rounded-control bg-signal-wash px-3 py-2.5 text-sm">
+            <dt className="text-muted">Username</dt>
+            <dd className="font-medium text-text">admin</dd>
+            <dt className="text-muted">Password</dt>
+            <dd className="font-medium text-text">admin123</dd>
+          </dl>
           <LoginForm next={target} />
         </div>
       </div>
